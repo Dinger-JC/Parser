@@ -33,6 +33,8 @@ class App:
     '''Industry-Hardstyle-Sex'''
     def __init__(self):
         '''Основное'''
+        log.info('Запуск')
+
         # Проверка необходимых файлов
         self.data: str = 'data.json'
         self.ffmpeg: str = 'ffmpeg.exe'
@@ -49,7 +51,6 @@ class App:
         self.presets: dict = links['videos']
 
         self.raw: str = input('Введите ссылку или выберите из доступных пресетов: 1, 2, 3, 4\n').strip()
-
         if self.raw in links.get('videos', {}):
             self.url: str = self.presets[self.raw]
         else:
@@ -168,7 +169,7 @@ class App:
             percent: float = round(downloaded / volume * 100, 2)
 
             print(
-                f'\r[СКАЧИВАНИЕ] '
+                '\r[СКАЧИВАНИЕ] '
                 f'Прогресс: {percent:.2f}% | '
                 f'Скорость: {self.FormatUnits(speed, '/s')} | '
                 f'Размер: {self.FormatUnits(volume)}', end = ''
@@ -310,7 +311,6 @@ class App:
 if __name__ == '__main__':
     try:
         log = Log(__name__)
-        log.info('Запуск')
         app = App()
 
     except Exception as error:

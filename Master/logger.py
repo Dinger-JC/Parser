@@ -9,8 +9,7 @@ def Log(name):
 
     if not log.handlers:
         formatter = logging.Formatter('[%(filename)s] [%(asctime)s] [%(levelname)s]: %(message)s')
-
-        file_logs = RotatingFileHandler('../Parser/logs.log', maxBytes = 8 * 1024 * 1024)
+        file_logs = RotatingFileHandler('../Master/logs.log', maxBytes = 8 * 1024 * 1024)
         console_logs = logging.StreamHandler()
 
         for handler in [file_logs, console_logs]:
