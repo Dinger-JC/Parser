@@ -118,6 +118,7 @@ class App:
             'reconnect_streamed': '1' # Автоматическое переподключение для стримов
         }
 
+        self.GetMain()
         self.GetInfo()
         self.GetVideo()
 
@@ -234,7 +235,7 @@ class App:
         else:
             return f'Другое {width}x{height}'
 
-    def GetInfo(self):
+    def GetMain(self):
         '''Получение данных с сайта'''
         # Проверка ссылки
         if not re.search(r'video|watch', self.url):
@@ -243,7 +244,7 @@ class App:
 
         # Проверка сайта
         try:
-            response = requests.get(self.url, timeout = 15, impersonate = f'chrome{self.chrome}')
+            response = requests.get(self.url, timeout = 30, impersonate = f'chrome{self.chrome}')
             self.CheckLink(response)
 
         except requests.exceptions.ConnectionError:
@@ -289,7 +290,8 @@ class App:
         log.info(f'Название: {title}')
         log.info(f'Прямая ссылка: {self.video_url}')
 
-        # Получение дополнительной информации
+    def GetInfo(self):
+        '''Получение дополнительной информации'''
         video_info: dict = ffmpeg.probe(self.video_url, **self.ffprobe_options)
         video_stream: dict = next((stream for stream in video_info['streams'] if stream['codec_type'] == 'video'), None)
         width: int = video_stream.get('width', 0)
