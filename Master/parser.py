@@ -50,7 +50,10 @@ class App:
         self.sites: dict = links['sites']
         self.presets: dict = links['videos']
 
-        self.raw: str = input('Введите ссылку или выберите из доступных пресетов: 1, 2, 3, 4\n').strip()
+        self.raw: str = input(
+            'Введите ссылку или выберите из доступных пресетов:\n'
+            '1 (Strip2), 2 (AnalMedia), 3 (NoodleMagazine), 4 (PornHub)\n'
+        )
         if self.raw in links.get('videos'):
             self.url: str = self.presets[self.raw]
         else:
@@ -115,8 +118,8 @@ class App:
             'reconnect_streamed': '1' # Автоматическое переподключение для стримов
         }
 
-        self.GetInfo(self.url, self.domain, self.sites)
-        self.GetVideo(self.video_url)
+        self.GetInfo()
+        self.GetVideo()
 
     def CheckRequiredFiles(self, data: str, ffmpeg: str, ffprobe: str):
         '''Проверка наличия необходимых файлов'''
@@ -231,31 +234,31 @@ class App:
         else:
             return f'Другое {width}x{height}'
 
-    def GetInfo(self, url: str, domain: str, sites: dict):
+    def GetInfo(self):
         '''Получение данных с сайта'''
         # Проверка ссылки
-        if not re.search(r'video|watch', url):
+        if not re.search(r'video|watch', self.url):
             log.error(f'Некорректная ссылка. По этой ссылке не удалось найти видео.')
             sys.exit(0)
 
         # Проверка сайта
         try:
-            response = requests.get(url, timeout = 15, impersonate = f'chrome{self.chrome}')
+            response = requests.get(self.url, timeout = 15, impersonate = f'chrome{self.chrome}')
             self.CheckLink(response)
 
         except requests.exceptions.ConnectionError:
-            log.error(f'Ошибка подключения к {domain}. Ресурс может быть заблокирован или требовать прокси/VPN.')
+            log.error(f'Ошибка подключения к {self.domain}. Ресурс может быть заблокирован или требовать прокси/VPN.')
             sys.exit(0)
 
         except requests.exceptions.Timeout:
-            log.error(f'Превышено время ожидания ответа от {domain}.')
+            log.error(f'Превышено время ожидания ответа от {self.domain}.')
             sys.exit(0)
 
         page = BeautifulSoup(response.text, 'html.parser')
         self.video_url: str = None
 
         # Проверка домена
-        if domain == sites['Strip2']:
+        if self.domain == self.sites['Strip2']:
             raw_title: str = page.find('title').text
             title: str = re.sub(r'\s*[-–—]\s*Strip2.co\s*$', '', raw_title, flags = re.IGNORECASE).strip()
             self.site: str = 'Strip2'
@@ -271,7 +274,7 @@ class App:
                 if find_link and f'/x{len(links) - 1}/' in find_link:
                     self.video_url: str = find_link
 
-        elif domain == sites['AnalMedia']:
+        elif self.domain == self.sites['AnalMedia']:
             raw_title: str = page.find('title').text
             title: str = re.sub(r'\s*[-–—]\s*AnalMedia\s*$', '', raw_title, flags = re.IGNORECASE).strip()
             self.site: str = 'AnalMedia'
@@ -300,11 +303,11 @@ class App:
         duration: str = str(timedelta(seconds = float(video_stream.get('duration')))).split('.')[0]
         log.info(f'Длительность: {duration}')
 
-    def GetVideo(self, video_url: str):
+    def GetVideo(self):
         '''Скачивание видео'''
-        log.info('Видео начало скачиваться')
+        log.info('Видео начинает скачиваться')
         with yt_dlp.YoutubeDL(self.yt_dlp_options) as video:
-            video.download([video_url])
+            video.download([self.video_url])
 
 
 
