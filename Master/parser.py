@@ -15,7 +15,6 @@ from datetime import timedelta
 from fractions import Fraction
 from pathlib import Path
 from pprint import pp
-from typing import Any
 from urllib.parse import urlparse
 
 # Сторонние библиотеки
@@ -142,7 +141,7 @@ class App:
         if error:
             sys.exit(0)
 
-    def FormatUnits(self, value: int, format: str = '') -> str:
+    def FormatUnits(self, value: int = 0, format: str = '') -> str:
         '''Конвертация байтов'''
         factor: dict = {
             'KiB': 1024,
@@ -164,7 +163,7 @@ class App:
 
         return f'{value / factor['GiB']:.3f} GiB' + format
 
-    def ProgressBar(self, data: Any):
+    def ProgressBar(self, data):
         '''Индикатор загрузки'''
         if data['status'] == 'downloading':
             speed: int = data.get('speed')
