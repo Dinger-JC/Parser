@@ -88,8 +88,8 @@ class App:
 
     def UpdateConfig(self):
         '''Обновление конфигурации для каждого видео'''
-        self.domain: str = urlparse(self.url).netloc
         log.info(f'| Ссылка: {self.url}')
+        self.domain: str = urlparse(self.url).netloc
         log.info(f'| Сайт: {self.domain}')
 
         # Директория
