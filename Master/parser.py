@@ -169,7 +169,6 @@ class App:
                 os.rename(self.file, new_name)
                 break
             counter += 1
-        log.info(f'Видео успешно скачалось ({self.path}).')
 
     def ProgressBar(self, data):
         '''Индикатор загрузки'''
@@ -239,7 +238,7 @@ class App:
         if not re.search(r'video|watch', self.url):
             log.error(f'Некорректная ссылка. По этой ссылке не удалось найти видео.')
             sys.exit(0)
-        log.info('Этап 1: получение основной информации...')
+        log.info('[Этап 1]: получение основной информации...')
 
         # Проверка сайта
         try:
@@ -284,30 +283,30 @@ class App:
             log.error('Загрузка со сторонних ресурсов невозможна. Cкачивание возможно только с Strip2 и AnalMedia.')
             sys.exit(0)
 
-        log.info(f'Название: {title}')
-        log.info(f'Прямая ссылка: {self.video_url}')
+        log.info(f'| Название: {title}')
+        log.info(f'| Прямая ссылка: {self.video_url}')
 
     def GetInfo(self):
         '''Получение дополнительной информации'''
-        log.info('Этап 2: получение дополнительной информации...')
+        log.info('[Этап 2]: получение дополнительной информации...')
 
         video_info: dict = ffmpeg.probe(self.video_url, **self.ffprobe_options)
         video_stream: dict = next((stream for stream in video_info['streams'] if stream['codec_type'] == 'video'), None)
 
         width: int = video_stream.get('width', 0)
         height: int = video_stream.get('height', 0)
-        log.info(f'Разрешение: {self.GetResolution(width, height)}')
+        log.info(f'| Разрешение: {self.GetResolution(width, height)}')
 
         fps: int = math.ceil(float(Fraction(video_stream.get('avg_frame_rate', 'N/A'))))
-        log.info(f'FPS: {fps}')
+        log.info(f'| FPS: {fps}')
 
         duration: str = video_stream.get('duration', 'N/A')
         duration: str = str(timedelta(seconds = float(video_stream.get('duration')))).split('.')[0]
-        log.info(f'Длительность: {duration}')
+        log.info(f'| Длительность: {duration}')
 
     def GetVideo(self):
         '''Скачивание видео'''
-        log.info('Этап 3: скачивание видео...')
+        log.info('[Этап 3]: скачивание видео...')
 
         try:
             with yt_dlp.YoutubeDL(self.yt_dlp_options) as video:
@@ -316,6 +315,8 @@ class App:
             log.error(f'Ошибка скачивания видео: {e}')
         except yt_dlp.utils.OSError as e:
             log.error(f'Ошибка системы: {e}')
+
+        log.info(f'| Видео успешно скачалось ({self.path}).')
 
 
 
