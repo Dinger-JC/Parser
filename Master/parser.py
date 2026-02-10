@@ -24,7 +24,11 @@ from bs4 import BeautifulSoup
 from curl_cffi import requests
 
 # Локальные модули
-from logger import Log
+try:
+    from logger import Log
+    log = Log(__name__)
+except ImportError:
+    print('Не удалось импортировать логгер. Возможно, он отсутствует.')
 
 
 
@@ -314,7 +318,6 @@ class App:
 
 if __name__ == '__main__':
     try:
-        log = Log(__name__)
         app = App()
 
     except Exception as error:
