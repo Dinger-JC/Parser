@@ -8,7 +8,7 @@ def Log(name):
     log.setLevel(logging.INFO)
 
     if not log.handlers:
-        formatter = logging.Formatter('[%(filename)s] [%(asctime)s] [%(levelname)s]-> %(message)s')
+        formatter = logging.Formatter('[%(filename)s] [%(asctime)s] [%(levelname)s] -> %(message)s')
         file_logs = RotatingFileHandler('../Master/logs.log', maxBytes = 8 * 1024 * 1024)
         console_logs = logging.StreamHandler()
 
