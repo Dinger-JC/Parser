@@ -35,7 +35,7 @@ except ImportError:
 class App:
     '''Industry-Hardstyle-Sex'''
     def __init__(self):
-        '''Основное'''
+        '''Хз что тут написать'''
         log.info('Запуск')
 
         # Проверка необходимых файлов
@@ -47,7 +47,34 @@ class App:
         # Версия Chrome
         self.chrome = '131'
 
-        # Извлечение ссылки
+        # Основной ход программы
+        self.Link()
+        self.GetData()
+        self.GetInfo()
+        self.GetVideo()
+
+    def CheckRequiredFiles(self, data: str, ffmpeg: str, ffprobe: str):
+        '''Проверка наличия необходимых файлов'''
+        link: str = 'https://github.com/GyanD/codexffmpeg/releases/tag/2026-01-05-git-2892815c45'
+        error: bool = False
+
+        if not os.path.exists(ffmpeg):
+            log.error(f'Файл "{ffmpeg}" не найден. Для необходимой работы скачайте его здесь: {link}.')
+            error = True
+
+        if not os.path.exists(ffprobe):
+            log.error(f'Файл "{ffprobe}" не найден. Для необходимой работы скачайте его здесь: {link}.')
+            error = True
+
+        if not os.path.exists(data):
+            log.error(f'Файл "{data}" не найден. Для необходимой работы создайте его по инструкции в README.')
+            error = True
+
+        if error:
+            sys.exit(0)
+
+    def Link(self):
+        '''Извлечение ссылки'''
         with open(self.data, encoding = 'utf-8') as file:
             links: dict = json.load(file)
         self.sites: dict = links['sites']
@@ -62,20 +89,21 @@ class App:
         else:
             self.url = self.raw
 
+    def UpdateConfig(self):
+        '''...'''
         self.domain: str = urlparse(self.url).netloc
-
         log.info(f'Ссылка: {self.url}')
         log.info(f'Сайт: {self.domain}')
 
         # Директория
-        self.name_folder: str = 'Saved Videos'
-        self.folder: Path = Path(__file__).parent / self.name_folder
-        self.folder.mkdir(parents = True, exist_ok = True)
+        self.folder: str = 'Saved Videos'
+        self.path: Path = Path(__file__).parent / self.folder
+        self.path.mkdir(parents = True, exist_ok = True)
 
         # Название кэша
         self.symbols: str = string.ascii_letters + string.digits + '_' * 5 + '-' * 5
-        self.filename: str = ''.join(random.choice(self.symbols) for _ in range(32))
-        self.file: str = f'{self.folder / self.filename}.mp4'
+        self.name: str = ''.join(random.choice(self.symbols) for _ in range(32))
+        self.file: str = f'{self.path / self.name}.mp4'
 
         # Заголовки HTTP-запросов
         self.headers: dict = {
@@ -121,51 +149,30 @@ class App:
             'reconnect_streamed': '1' # Автоматическое переподключение для стримов
         }
 
-        self.GetMain()
-        self.GetInfo()
-        self.GetVideo()
-
-    def CheckRequiredFiles(self, data: str, ffmpeg: str, ffprobe: str):
-        '''Проверка наличия необходимых файлов'''
-        link: str = 'https://github.com/GyanD/codexffmpeg/releases/tag/2026-01-05-git-2892815c45'
-        error: bool = False
-
-        if not os.path.exists(ffmpeg):
-            log.error(f'Файл "{ffmpeg}" не найден. Для необходимой работы скачайте его здесь: {link}.')
-            error = True
-
-        if not os.path.exists(ffprobe):
-            log.error(f'Файл "{ffprobe}" не найден. Для необходимой работы скачайте его здесь: {link}.')
-            error = True
-
-        if not os.path.exists(data):
-            log.error(f'Файл "{data}" не найден. Для необходимой работы создайте его по инструкции в README.')
-            error = True
-
-        if error:
-            sys.exit(0)
-
     def FormatUnits(self, value: int = 0, format: str = '') -> str:
         '''Конвертация байтов'''
-        factor: dict = {
-            'KiB': 1024,
-            'MiB': 1024 ** 2,
-            'GiB': 1024 ** 3
-        }
+        factor: dict = {'KiB': 1024, 'MiB': 1024 ** 2, 'GiB': 1024 ** 3}
 
         if value is None or value == 0:
             return 'N/A'
-
         if value < factor['KiB']:
             return f'{value} B' + format
-
         if value < factor['MiB']:
             return f'{value / factor['KiB']:.3f} KiB' + format
-
         if value < factor['GiB']:
             return f'{value / factor['MiB']:.3f} MiB' + format
-
         return f'{value / factor['GiB']:.3f} GiB' + format
+
+    def File(self):
+        '''Создание уникального имени файла'''
+        counter = 1
+        while True:
+            new_name: str = Path(self.path) / f'{self.site} Video-{counter}.mp4'
+            if not new_name.exists():
+                os.rename(self.file, new_name)
+                break
+            counter += 1
+        log.info(f'Видео успешно скачалось ({self.path}).')
 
     def ProgressBar(self, data):
         '''Индикатор загрузки'''
@@ -183,18 +190,11 @@ class App:
             )
 
         elif data['status'] == 'finished':
-            counter = 1
-            while True:
-                new_name: str = Path(self.folder) / f'{self.site} Video-{counter}.mp4'
-                if not new_name.exists():
-                    os.rename(self.file, new_name)
-                    break
-                counter += 1
-            log.info(f'Видео успешно скачалось ({self.folder}).')
+            self.File()
 
-    def CheckLink(self, response: str) -> str:
+    def CheckLink(self) -> str:
         '''Проверка ответа страницы'''
-        code: int = response.status_code
+        code: int = self.response.status_code
         errors: dict = {
             400: 'некорректный запрос. Проверьте правильность введенных данных.',
             401: 'требуется авторизация. Войдите в аккаунт, чтобы получить доступ.',
@@ -238,17 +238,20 @@ class App:
         else:
             return f'Другое {width}x{height}'
 
-    def GetMain(self):
+    def GetData(self):
         '''Получение данных с сайта'''
+        self.UpdateConfig()
+
         # Проверка ссылки
         if not re.search(r'video|watch', self.url):
             log.error(f'Некорректная ссылка. По этой ссылке не удалось найти видео.')
             sys.exit(0)
+        log.info('Этап 1: получение основной информации...')
 
         # Проверка сайта
         try:
-            response = requests.get(self.url, timeout = 30, impersonate = f'chrome{self.chrome}')
-            self.CheckLink(response)
+            self.response = requests.get(self.url, timeout = 30, impersonate = f'chrome{self.chrome}')
+            self.CheckLink()
 
         except requests.exceptions.ConnectionError:
             log.error(f'Ошибка подключения к {self.domain}. Ресурс может быть заблокирован или требовать прокси/VPN.')
@@ -258,7 +261,7 @@ class App:
             log.error(f'Превышено время ожидания ответа от {self.domain}.')
             sys.exit(0)
 
-        page = BeautifulSoup(response.text, 'html.parser')
+        page = BeautifulSoup(self.response.text, 'html.parser')
         self.video_url: str = None
 
         # Проверка домена
@@ -295,8 +298,11 @@ class App:
 
     def GetInfo(self):
         '''Получение дополнительной информации'''
+        log.info('Этап 2: получение дополнительной информации...')
+
         video_info: dict = ffmpeg.probe(self.video_url, **self.ffprobe_options)
         video_stream: dict = next((stream for stream in video_info['streams'] if stream['codec_type'] == 'video'), None)
+
         width: int = video_stream.get('width', 0)
         height: int = video_stream.get('height', 0)
         log.info(f'Разрешение: {self.GetResolution(width, height)}')
@@ -310,7 +316,7 @@ class App:
 
     def GetVideo(self):
         '''Скачивание видео'''
-        log.info('Видео начинает скачиваться')
+        log.info('Этап 3: скачивание видео...')
         with yt_dlp.YoutubeDL(self.yt_dlp_options) as video:
             video.download([self.video_url])
 
