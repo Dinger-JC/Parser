@@ -36,7 +36,7 @@ class App:
     '''Industry-Hardstyle-Sex'''
     def __init__(self):
         '''Хз что тут написать'''
-        log.info('[Запуск]')
+        log.info('Запуск')
 
         # Проверка необходимых файлов
         self.data: str = 'data.json'
@@ -89,6 +89,7 @@ class App:
     def UpdateConfig(self):
         '''Обновление конфигурации для каждого видео'''
         # Проверка ссылки
+        log.info('[Этап 1]: подготовка...')
         log.info(f'| Ссылка: {self.url}')
         if not re.search(r'^https?://[\w\.-]+\/.*(video|watch).*', self.url):
             log.error(f'Некорректная ссылка. По этой ссылке не удалось найти видео.')
@@ -238,7 +239,7 @@ class App:
     def GetData(self):
         '''Получение данных с сайта'''
         self.UpdateConfig()
-        log.info('[Этап 1]: получение основной информации...')
+        log.info('[Этап 2]: получение основной информации...')
 
         # Проверка сайта
         try:
@@ -288,7 +289,7 @@ class App:
 
     def GetInfo(self):
         '''Получение дополнительной информации'''
-        log.info('[Этап 2]: получение дополнительной информации...')
+        log.info('[Этап 3]: получение дополнительной информации...')
 
         video_info: dict = ffmpeg.probe(self.video_url, **self.ffprobe_options)
         video_stream: dict = next((stream for stream in video_info['streams'] if stream['codec_type'] == 'video'), None)
@@ -306,7 +307,7 @@ class App:
 
     def GetVideo(self):
         '''Скачивание видео'''
-        log.info('[Этап 3]: скачивание видео...')
+        log.info('[Этап 4]: скачивание видео...')
 
         try:
             with yt_dlp.YoutubeDL(self.yt_dlp_options) as video:
