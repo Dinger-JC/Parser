@@ -61,15 +61,12 @@ class App:
         if not os.path.exists(ffmpeg):
             log.error(f'Файл "{ffmpeg}" не найден. Для необходимой работы скачайте его здесь: {link}.')
             error = True
-
         if not os.path.exists(ffprobe):
             log.error(f'Файл "{ffprobe}" не найден. Для необходимой работы скачайте его здесь: {link}.')
             error = True
-
         if not os.path.exists(data):
             log.error(f'Файл "{data}" не найден. Для необходимой работы создайте его по инструкции в README.')
             error = True
-
         if error:
             sys.exit(0)
 
@@ -90,7 +87,7 @@ class App:
             self.url = self.raw
 
     def UpdateConfig(self):
-        '''...'''
+        '''Обновление конфигурации для каждого видео'''
         self.domain: str = urlparse(self.url).netloc
         log.info(f'Ссылка: {self.url}')
         log.info(f'Сайт: {self.domain}')
@@ -225,16 +222,12 @@ class App:
 
         if [width, height] == quality_types['SD']:
             return f'SD {width}x{height}'
-
         elif [width, height] == quality_types['HD']:
             return f'HD {width}x{height}'
-
         elif [width, height] == quality_types['Full HD']:
             return f'Full HD {width}x{height}'
-
         elif [width, height] == quality_types['2K Quad HD']:
             return f'2K Quad HD {width}x{height}'
-
         else:
             return f'Другое {width}x{height}'
 
@@ -252,11 +245,9 @@ class App:
         try:
             self.response = requests.get(self.url, timeout = 30, impersonate = f'chrome{self.chrome}')
             self.CheckLink()
-
         except requests.exceptions.ConnectionError:
             log.error(f'Ошибка подключения к {self.domain}. Ресурс может быть заблокирован или требовать прокси/VPN.')
             sys.exit(0)
-
         except requests.exceptions.Timeout:
             log.error(f'Превышено время ожидания ответа от {self.domain}.')
             sys.exit(0)
@@ -317,14 +308,19 @@ class App:
     def GetVideo(self):
         '''Скачивание видео'''
         log.info('Этап 3: скачивание видео...')
-        with yt_dlp.YoutubeDL(self.yt_dlp_options) as video:
-            video.download([self.video_url])
+
+        try:
+            with yt_dlp.YoutubeDL(self.yt_dlp_options) as video:
+                video.download([self.video_url])
+        except yt_dlp.utils.DownloadError as e:
+            log.error(f'Ошибка скачивания видео: {e}')
+        except yt_dlp.utils.OSError as e:
+            log.error(f'Ошибка системы: {e}')
 
 
 
 if __name__ == '__main__':
     try:
         app = App()
-
-    except Exception as error:
-        log.error(f'Непредвиденная ошибка: {error}')
+    except Exception as e:
+        log.error(f'Непредвиденная ошибка: {e}')
