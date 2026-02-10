@@ -36,7 +36,7 @@ class App:
     '''Industry-Hardstyle-Sex'''
     def __init__(self):
         '''Хз что тут написать'''
-        log.info('Запуск')
+        log.info('[Запуск]')
 
         # Проверка необходимых файлов
         self.data: str = 'data.json'
@@ -89,8 +89,8 @@ class App:
     def UpdateConfig(self):
         '''Обновление конфигурации для каждого видео'''
         self.domain: str = urlparse(self.url).netloc
-        log.info(f'Ссылка: {self.url}')
-        log.info(f'Сайт: {self.domain}')
+        log.info(f'| Ссылка: {self.url}')
+        log.info(f'| Сайт: {self.domain}')
 
         # Директория
         self.folder: str = 'Saved Videos'
