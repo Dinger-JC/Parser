@@ -77,20 +77,25 @@ class App:
         self.sites: dict = links['sites']
         self.presets: dict = links['videos']
 
-        self.raw: str = input(
+        raw: str = input(
             'Введите ссылку или выберите из доступных пресетов:\n'
             '1 (Strip2), 2 (AnalMedia), 3 (NoodleMagazine), 4 (PornHub)\n'
         )
-        if self.raw in links.get('videos'):
-            self.url: str = self.presets[self.raw]
+        if raw in links.get('videos'):
+            self.url: str = self.presets[raw]
         else:
-            self.url = self.raw
+            self.url = raw
 
     def UpdateConfig(self):
         '''Обновление конфигурации для каждого видео'''
+        # Проверка ссылки
         log.info(f'| Ссылка: {self.url}')
-        self.domain: str = urlparse(self.url).netloc
-        log.info(f'| Сайт: {self.domain}')
+        if not re.search(r'^https?://[\w\.-]+\/.*(video|watch).*', self.url):
+            log.error(f'Некорректная ссылка. По этой ссылке не удалось найти видео.')
+            sys.exit(0)
+        else:
+            self.domain: str = urlparse(self.url).netloc
+            log.info(f'| Сайт: {self.domain}')
 
         # Директория
         self.folder: str = 'Saved Videos'
@@ -233,11 +238,6 @@ class App:
     def GetData(self):
         '''Получение данных с сайта'''
         self.UpdateConfig()
-
-        # Проверка ссылки
-        if not re.search(r'video|watch', self.url):
-            log.error(f'Некорректная ссылка. По этой ссылке не удалось найти видео.')
-            sys.exit(0)
         log.info('[Этап 1]: получение основной информации...')
 
         # Проверка сайта
