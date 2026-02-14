@@ -11,6 +11,7 @@ import os
 import random
 import re
 import string
+import subprocess
 import sys
 import threading
 from datetime import timedelta
@@ -20,10 +21,32 @@ from pprint import pp
 from urllib.parse import urlparse
 
 # Сторонние библиотеки
-import ffmpeg
-import yt_dlp
-from bs4 import BeautifulSoup
-from curl_cffi import requests
+packages = [
+    'python-ffmpeg',
+    'yt-dlp',
+    'beautifulsoup4',
+    'curl-cffi',
+    'PySide6'
+]
+
+try:
+    import ffmpeg
+    import yt_dlp
+    from bs4 import BeautifulSoup
+    from curl_cffi import requests
+    from PySide6.QtGui import *
+    from PySide6.QtCore import *
+    from PySide6.QtWidgets import *
+except ImportError:
+    print('Отсутствуют необходимые модули. Начинается установка модулей...')
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', *packages])
+    import ffmpeg
+    import yt_dlp
+    from bs4 import BeautifulSoup
+    from curl_cffi import requests
+    from PySide6.QtGui import *
+    from PySide6.QtCore import *
+    from PySide6.QtWidgets import *
 
 # Локальные модули
 try:
