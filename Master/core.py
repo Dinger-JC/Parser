@@ -284,7 +284,7 @@ class Core:
             self.video_url: str = video.find('source')['src']
 
         else:
-            log.error('Загрузка со сторонних ресурсов невозможна. Cкачивание возможно только с Strip2 и AnalMedia.')
+            log.error('Загрузка со сторонних ресурсов невозможна. Cкачивание возможно только с Strip2, XGroovy и AnalMedia.')
             sys.exit(0)
 
         log.info(f'| Название: {title}')
