@@ -1,5 +1,6 @@
 # Parser Industry-Hardstyle-Sex
 # Copyright 2026 t.me/Dinger_JC
+# Master functionality
 
 
 
@@ -11,6 +12,7 @@ import random
 import re
 import string
 import sys
+import threading
 from datetime import timedelta
 from fractions import Fraction
 from pathlib import Path
@@ -32,8 +34,8 @@ except ImportError:
 
 
 
-class App:
-    '''Industry-Hardstyle-Sex'''
+class Core:
+    '''Ядро парсера'''
     def __init__(self):
         '''Хз что тут написать'''
         log.info('Запуск')
@@ -47,11 +49,10 @@ class App:
         # Версия Chrome
         self.chrome = '131'
 
-        # Основной ход программы
-        self.Link()
-        self.GetData()
-        self.GetInfo()
-        self.GetVideo()
+        with open(self.data, encoding = 'utf-8') as file:
+            links: dict = json.load(file)
+        self.sites: dict = links['sites']
+        self.presets: dict = links['videos']
 
     def CheckRequiredFiles(self, data: str, ffmpeg: str, ffprobe: str):
         '''Проверка наличия необходимых файлов'''
@@ -70,32 +71,28 @@ class App:
         if error:
             sys.exit(0)
 
-    def Link(self):
+    def Link(self, url: str) -> str:
         '''Извлечение ссылки'''
         with open(self.data, encoding = 'utf-8') as file:
             links: dict = json.load(file)
         self.sites: dict = links['sites']
         self.presets: dict = links['videos']
 
-        raw: str = input(
-            'Введите ссылку или выберите из доступных пресетов:\n'
-            '1 (Strip2), 2 (AnalMedia), 3 (NoodleMagazine), 4 (PornHub)\n'
-        )
-        if raw in links.get('videos'):
-            self.url: str = self.presets[raw]
-        else:
-            self.url = raw
+        if url in links.get('videos'):
+            url: str = self.presets[url]
 
-    def UpdateConfig(self):
+        return url
+
+    def UpdateConfig(self, url: str):
         '''Обновление конфигурации для каждого видео'''
         # Проверка ссылки
-        log.info('[Этап 1]: подготовка...')
-        log.info(f'| Ссылка: {self.url}')
-        if not re.search(r'^https?://[\w\.-]+\/.*(video|watch).*', self.url):
+        log.info('[Этап 1]: проверка...')
+        log.info(f'| Ссылка: {url}')
+        if not re.search(r'^https?://[\w\.-]+\/.*(video|watch).*', url):
             log.error(f'Некорректная ссылка. По этой ссылке не удалось найти видео.')
             sys.exit(0)
         else:
-            self.domain: str = urlparse(self.url).netloc
+            self.domain: str = urlparse(url).netloc
             log.info(f'| Сайт: {self.domain}')
 
         # Директория
@@ -218,32 +215,27 @@ class App:
     def GetResolution(self, width: int, height: int) -> str:
         '''Получение типа разрешения'''
         quality_types: dict = {
-            'LD': [426, 240],
+            'LD': [428, 240],
             'SD': [640, 360],
             'HD': [1280, 720],
             'Full HD': [1920, 1080],
-            '2K Quad HD': [2560, 1440]
+            '2K Quad HD': [2560, 1440],
+            '4k Ultra HD': [3840, 2160]
         }
 
-        if [width, height] == quality_types['SD']:
-            return f'SD {width}x{height}'
-        elif [width, height] == quality_types['HD']:
-            return f'HD {width}x{height}'
-        elif [width, height] == quality_types['Full HD']:
-            return f'Full HD {width}x{height}'
-        elif [width, height] == quality_types['2K Quad HD']:
-            return f'2K Quad HD {width}x{height}'
-        else:
-            return f'Другое {width}x{height}'
+        for name, resolution in quality_types.items():
+            if [width, height] == resolution:
+                return f'{name} {width}x{height}'
+        return f'Другое {width}x{height}'
 
-    def GetData(self):
+    def GetData(self, url: str):
         '''Получение данных с сайта'''
-        self.UpdateConfig()
+        self.UpdateConfig(url)
         log.info('[Этап 2]: получение основной информации...')
 
         # Проверка сайта
         try:
-            self.response = requests.get(self.url, timeout = 30, impersonate = f'chrome{self.chrome}')
+            self.response = requests.get(url, timeout = 30, impersonate = f'chrome{self.chrome}')
             self.CheckLink()
         except requests.exceptions.ConnectionError:
             log.error(f'Ошибка подключения к {self.domain}. Ресурс может быть заблокирован или требовать прокси/VPN.')
@@ -271,6 +263,17 @@ class App:
                 find_link: str = str(href)
                 if find_link and f'/x{len(links) - 1}/' in find_link:
                     self.video_url: str = find_link
+
+        elif self.domain == self.sites['XGroovy']:
+            raw_title: str = page.find('title').text
+            title: str = raw_title
+
+            tags = ['4k', '1080p', '720p', '480p', '240p']
+            for tag in tags:
+                video = page.find('source', title = tag)
+                if video:
+                    self.video_url = video.get('src')
+                    break
 
         elif self.domain == self.sites['AnalMedia']:
             raw_title: str = page.find('title').text
@@ -301,8 +304,8 @@ class App:
         fps: int = math.ceil(float(Fraction(video_stream.get('avg_frame_rate', 'N/A'))))
         log.info(f'| FPS: {fps}')
 
-        duration: str = video_stream.get('duration', 'N/A')
-        duration: str = str(timedelta(seconds = float(video_stream.get('duration')))).split('.')[0]
+        raw_duration: float = video_stream.get('duration')
+        duration: str = str(timedelta(seconds = float(raw_duration))).split('.')[0] if raw_duration else 'N/A'
         log.info(f'| Длительность: {duration}')
 
     def GetVideo(self):
@@ -319,10 +322,6 @@ class App:
 
         log.info(f'| Видео успешно скачалось ({self.path}).')
 
-
-
-if __name__ == '__main__':
-    try:
-        app = App()
-    except Exception as e:
-        log.error(f'Непредвиденная ошибка: {e}')
+    def Get(self):
+        '''...'''
+        ...
