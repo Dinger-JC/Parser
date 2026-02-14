@@ -28,7 +28,7 @@ Create a `data.json` file and write the following code. Then add your links to t
   "videos":
     {
       "1": "https://vps402.strip2.co/video/...",
-      "2": "https://rt.xgroovy.com/videos/",
+      "2": "https://rt.xgroovy.com/videos/...",
       "3": "https://anal.media/ru/video/..."
     }
 }
